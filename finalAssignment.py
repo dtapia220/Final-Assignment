@@ -1,13 +1,10 @@
 import numpy as np
 import pandas as pd
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-import seaborn as sns
-import folium
 import io
 import requests
 
-# Importing Data
+# Import Data
 URL = "https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-DV0101EN-SkillsNetwork/Data%20Files/historical_automobile_sales.csv"
 response = requests.get(URL)
 text = io.StringIO(response.text)
@@ -19,28 +16,31 @@ print('Data downloaded and read into a dataframe!')
 print(df.describe())
 print(df.columns)
 
-# Ensure that your data has a 'Year' column and a 'Automobile_Sales' or similar column
+# Convert 'Year' to datetime if it's not already, and set it as the index
 df['Year'] = pd.to_datetime(df['Year'], format='%Y')
 df.set_index('Year', inplace=True)
 
-# Create the line plot
-plt.figure(figsize=(10, 6))
-plt.plot(df.index, df['Automobile_Sales'], marker='o')
+# Group data by 'Year' and calculate the mean of 'Automobile_Sales'
+df_line = df.groupby(df.index.year)['Automobile_Sales'].mean()
 
-# Customize the plot
-plt.xticks(df.index.year)  # Setting the x-axis with year ticks
+# Create the plot
+plt.figure(figsize=(10, 6))
+df_line.plot(kind='line', marker='o')
 plt.xlabel('Year')
-plt.ylabel('Automobile Sales')
+plt.ylabel('Average Automobile Sales')
 plt.title('Automobile Sales during Recession')
 
-# Adding annotations for two recession years (for example, 2008 and 2020)
-plt.annotate('Recession', xy=(2008, df.loc['2008', 'Automobile_Sales']), 
-             xytext=(2008, df['Automobile_Sales'].max()), 
-             arrowprops=dict(facecolor='black', shrink=0.05))
-
-plt.annotate('Recession', xy=(2020, df.loc['2020', 'Automobile_Sales']), 
-             xytext=(2020, df['Automobile_Sales'].max()), 
-             arrowprops=dict(facecolor='black', shrink=0.05))
+# Add annotations for specific recession years
+recession_years = [2008, 2020]  # Example years
+for year in recession_years:
+    if year in df_line.index:
+        plt.annotate(
+            'Recession',
+            xy=(year, df_line.loc[year]), 
+            xytext=(year, df_line.max() * 0.9),  # Adjust text position
+            arrowprops=dict(facecolor='black', shrink=0.05),
+            fontsize=10
+        )
 
 # Save the plot as "Line_Plot_1.png"
 plt.savefig("Line_Plot_1.png")
@@ -51,24 +51,3 @@ plt.show()
 # Optional: Further inspection of the data
 print(df.describe())
 print(df.columns)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
